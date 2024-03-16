@@ -1,7 +1,8 @@
 
 const catchAsync = require('../utils/catchAsync');
 const Users = require('../models/userModel')
-const Role = require('../models/roleModel')
+const Jobs = require('../models/jobdetails')
+const AssessmentResult = require('../models/assessmentresult')
 const Services = require('../services/excel')
 
 const Register = catchAsync(async (req, res, next) => {
@@ -50,34 +51,40 @@ const Register = catchAsync(async (req, res, next) => {
 const Login = catchAsync(async (req, res, next) => {
   try {
     const values = req.body;
-    if (values.username != '' && values.username != null && values.username != undefined && values.password != '' && values.password != null && values.password != undefined) {
+    console.log("TCL: Login -> values", values)
+    if (values.email != '' && values.email != null && values.email != undefined && values.password != '' && values.password != null && values.password != undefined) {
       const query = {};
-      query.username = values.username;
-      query.status = 0;
-      const UsersDetails = await Users.findOne(query).populate('organization', 'name').populate('role', 'name')
-      //console.log("TCL: Login -> UsersDetails", UsersDetails)
+      query.email = values.email;
+      const UsersDetails = await Jobs.findOne(query)
+      // console.log("TCL: Login -> UsersDetails", UsersDetails)
       if (UsersDetails != null) {
-        let Response = {
-          id: UsersDetails.id,
-          username: UsersDetails.username,
-          organization: UsersDetails.organization,
-          role: UsersDetails.role,
-          status: UsersDetails.status,
-        }
         const isPasswordMatched = await UsersDetails.comparePassword(values.password);
         if (!isPasswordMatched) {
           const errcode = new Error('Password mismatch.');
           errcode.statusCode = 201;
           return next(errcode);
         } else {
-          const token = await UsersDetails.getJWTToken();
-          res.send({
-            success: true,
-            code: 200,
-            Data: Response,
-            Token: token,
-            status: "Data Saved Success",
-          });
+          const Assessments = await AssessmentResult.findOne({ userId: UsersDetails.id, status: 0 })
+          if (Assessments != null) {
+            let Response = {
+              userId: UsersDetails.id,
+              email: UsersDetails.email,
+              assessmentId: Assessments.id,
+            }
+            const token = await UsersDetails.getJWTToken();
+            res.send({
+              success: true,
+              code: 200,
+              Data: Response,
+              Token: token,
+              status: "Data Saved Success",
+            });
+
+          } else {
+            const errcode = new Error('Assesment not Assigned.');
+            errcode.statusCode = 201;
+            return next(errcode);
+          }
         }
       } else {
         const errcode = new Error('Email or Password mismatch.');

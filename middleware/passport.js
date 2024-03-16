@@ -9,6 +9,7 @@ const jwtOptions = {
 };
 
 passport.use(new JwtStrategy(jwtOptions, async (payload, done) => {
+  console.log("TCL: payload", payload)
   try {
     const user = await User.findById(payload.id);
     if (user) {

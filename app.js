@@ -14,6 +14,7 @@ var rolesRouter = require('./routes/roles.js');
 
 
 const errorHandler = require('./utils/ApiError');
+const decryptRequestBody = require('./middleware/Decrypt');
 var app = express();
 
 // view engine setup
@@ -22,18 +23,49 @@ app.set('view engine', 'pug');
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(passport.initialize());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use((req, res, next) => {
+
+  let data = '';
+  req.setEncoding('utf8');
+  req.on('data', chunk => {
+    data += chunk;
+  });
+  req.on('end', () => {
+    req.body = data;
+    next();
+  });
+});
+//Error Gobal
+app.use(errorHandler);
+app.use(decryptRequestBody);
 // Routes
 app.use('/api/organization', organizationRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/role', rolesRouter);
 
-//Error Gobal
-app.use(errorHandler);
+//decrypt response Body
+// const encrption = require('./services/encrypt');
+// secretHexKey = process.env.secretHexKey; // should
+// const getTimestamp1 = () => {
+//   let today = new Date();
+//   let date = today.getFullYear() + '-' + ('0' + (today.getMonth() + 1)).slice(-2) + '-' + ('0' + today.getDate()).slice(-2);
+//   let time = ('0' + (today.getHours())).slice(-2) + ":" + ('0' + (today.getMinutes())).slice(-2);
+//   return date + ' ' + time;
+// }
+// let timestamp1 = getTimestamp1();
+
+// let data = {
+//   "email": "sadmin@gmail.com",
+//   "password": "123456"
+// }
+// const encOutput2 = encrption.encrypt((timestamp1 + JSON.stringify(data)), secretHexKey)
+
+// console.log(encOutput2);
+
 //Database Connection
 mongoose.connect(process.env.MONGO_ADDRESS);
 const db = mongoose.connection;
