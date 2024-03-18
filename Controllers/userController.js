@@ -66,12 +66,13 @@ const Login = catchAsync(async (req, res, next) => {
         } else {
           const Assessments = await AssessmentResult.findOne({ userId: UsersDetails.id, status: 0 })
           if (Assessments != null) {
+            let TokenRecord = { assessmentId: Assessments.id }
             let Response = {
               userId: UsersDetails.id,
               email: UsersDetails.email,
               assessmentId: Assessments.id,
             }
-            const token = await UsersDetails.getJWTToken();
+            const token = await UsersDetails.getJWTToken(TokenRecord);
             res.send({
               success: true,
               code: 200,

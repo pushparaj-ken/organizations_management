@@ -75,12 +75,12 @@ JobApplydetailsSchema.pre('save', function (next) {
   return next();
 });
 
-JobApplydetailsSchema.methods.getJWTToken = function () {
+JobApplydetailsSchema.methods.getJWTToken = function (assessmentId) {
   const expiresInMinutes = process.env.JWT_EXPIRE;
   const expirationTimeInSeconds = expiresInMinutes * 60;
 
   //const expirationTimestamp = Math.floor(Date.now() / 1000) + expirationTimeInSeconds;
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+  return jwt.sign({ id: this._id, assessmentId }, process.env.JWT_SECRET, {
     expiresIn: expirationTimeInSeconds,
   });
 };

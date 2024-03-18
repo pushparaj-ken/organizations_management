@@ -12,6 +12,7 @@ const passport = require('./middleware/passport');
 var organizationRouter = require('./routes/organization');
 var usersRouter = require('./routes/users');
 var rolesRouter = require('./routes/roles.js');
+var AssessmentRouter = require('./routes/assessment.js');
 
 
 const errorHandler = require('./utils/ApiError');
@@ -32,24 +33,35 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-
-  let data = '';
-  req.setEncoding('utf8');
-  req.on('data', chunk => {
-    data += chunk;
-  });
-  req.on('end', () => {
-    req.body = data;
+  if (req.headers['content-type'] !== 'application/json') {
+    let data = '';
+    req.setEncoding('utf8');
+    req.on('data', chunk => {
+      data += chunk;
+    });
+    req.on('end', () => {
+      req.body = data;
+      next();
+    });
+  } else {
     next();
-  });
+  }
+});
+
+app.use((req, res, next) => {
+  if (req.headers['content-type'] !== 'application/json' && req.headers['content-type'] !== undefined) {
+    decryptRequestBody(req, res, next);
+  } else {
+    next();
+  }
 });
 //Error Gobal
 app.use(errorHandler);
-app.use(decryptRequestBody);
 // Routes
 app.use('/api/organization', organizationRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/role', rolesRouter);
+app.use('/api/assessment', AssessmentRouter);
 
 //decrypt response Body
 // const encrption = require('./services/encrypt');
