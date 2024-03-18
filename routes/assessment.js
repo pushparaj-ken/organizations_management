@@ -9,6 +9,8 @@ const Auth = require('../middleware/auth');
 
 router.get('/list', Auth.AuthMiddleware, AssessmentController.ListAssessment);
 
+router.put('/update', Auth.AuthMiddleware, AssessmentController.UpdateAssessment);
+
 
 router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
