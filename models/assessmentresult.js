@@ -3,7 +3,6 @@ var Schema = mongoose.Schema;
 
 
 var ResultSchema = new Schema({
-  id: { type: String, default: "", required: false },
   questionId: { type: String, default: "", required: true },
   answerId: { type: String, default: "", required: true },
   isCorrect: { type: Boolean, default: false, required: true },
