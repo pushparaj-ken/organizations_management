@@ -76,7 +76,7 @@ app.use('/api/assessment', AssessmentRouter);
 
 // let data = {
 //   "email": "sadmin@gmail.com",
-//   "password": "123456"
+//   "password": "sadmin@1234"
 // }
 // const encOutput2 = encrption.encrypt((timestamp1 + JSON.stringify(data)), secretHexKey)
 

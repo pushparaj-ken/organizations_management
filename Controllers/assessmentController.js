@@ -146,7 +146,7 @@ const UpdateAssessment = catchAsync(async (req, res) => {
         status: 0
       }
       values.userId = params.userId
-      values.userId = params.assessmentId
+      values.assessmentId = params.assessmentId
       const changes = {
         $set: values
       }
