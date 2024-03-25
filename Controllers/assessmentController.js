@@ -10,7 +10,97 @@ const ListAssessment = catchAsync(async (req, res) => {
     if (values.userId != '' && values.id != null && values.id != undefined) {
       query.id = values.assessmentId;
     }
-    const Results = await Assessment.find(query, { _id: 0, "question._id": 0, "question.option._id": 0 }).sort({ createdBy: -1 }).lean().exec();
+    const Results = await Assessment.aggregate([
+      {
+        $match: query
+      },
+      {
+        $project: {
+          _id: 0,
+          id: 1,
+          assessmentName: 1,
+          status: 1,
+          createdBy: 1,
+          updatedBy: 1,
+          question: {
+            $filter: {
+              input: {
+                $map: {
+                  input: "$question",
+                  as: "que",
+                  in: {
+                    $cond: {
+                      if: {
+                        $and: [
+                          { $isArray: "$$que.option" },
+                          {
+                            $in: [
+                              "$$que.optionType",
+                              [0, 1, 2],
+                            ],
+                          },
+                          {
+                            $or: [
+                              {
+                                $gt: [
+                                  {
+                                    $size: "$$que.option",
+                                  },
+                                  0,
+                                ],
+                              }, // For optionType 0 and 1, check if there are options
+                              {
+                                $eq: [
+                                  "$$que.optionType",
+                                  2,
+                                ],
+                              }, // For optionType 2, check if there are no options
+                            ],
+                          },
+                        ],
+                      },
+                      then: {
+                        id: "$$que.id",
+                        questionName:
+                          "$$que.questionName",
+                        optionType: "$$que.optionType",
+                        option: {
+                          $filter: {
+                            input: {
+                              $map: {
+                                input: "$$que.option",
+                                as: "opt",
+                                in: {
+                                  id: "$$opt.id",
+                                  name: "$$opt.name",
+                                  isCorrect:
+                                    "$$opt.isCorrect",
+                                },
+                              },
+                            },
+                            as: "filopt",
+                            cond: {
+                              $ne: ["$$filopt", ""],
+                            },
+                          },
+                        },
+                      },
+                      else: "",
+                    },
+                  },
+                },
+              },
+              as: "filques",
+              cond: {
+                $ne: ["$$filques", ""],
+              },
+            },
+          },
+          createdAt: 1,
+          updatedAt: 1,
+        }
+      }
+    ]);
     if (Results.length > 0) {
       res.send({
         success: true,
